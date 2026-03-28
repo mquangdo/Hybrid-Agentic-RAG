@@ -7,7 +7,12 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+.venv/
+
+#Folder
+db/__pycache__/
+db/chroma_db/
+
 
 #Environment variables
 .env
