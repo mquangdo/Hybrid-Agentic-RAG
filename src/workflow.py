@@ -1,12 +1,39 @@
+import os, sys 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from typing import List, Any
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
 from state import AgentState
+from langchain_groq import ChatGroq
+from tools import document_retriever
+from dotenv import load_dotenv
+
+load_dotenv()  
+
+llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.7, api_key=os.getenv("GROQ_API_KEY"))
+tools = [document_retriever]
+llm_with_tools = llm.bind_tools(tools)
+
+def call_model(state: AgentState):
+        """Node: Calls the LLM to generate response or tool calls."""
+        messages = state["messages"]
+        response = llm_with_tools.invoke(messages)
+        return {"messages": [response]}
+
+def should_continue(state: AgentState):
+    """Edge: Determines whether to continue with tools or end."""
+    messages = state["messages"]
+    last_message = messages[-1]
+
+    if not last_message.tool_calls:
+        return "end"
+    return "tools"
 
 
-def build_workflow(llm_with_tools, tools: List[BaseTool]):
+def build_workflow():
     """
     Builds a StateGraph workflow with ReAct pattern.
 
@@ -25,30 +52,10 @@ def build_workflow(llm_with_tools, tools: List[BaseTool]):
         Compiled StateGraph workflow
     """
 
-    def call_model(state: AgentState):
-        """Node: Calls the LLM to generate response or tool calls."""
-        messages = state["messages"]
-        response = llm_with_tools.invoke(messages)
-        return {"messages": [response]}
-
-    def call_tools(state: AgentState):
-        """Node: Executes tool calls."""
-        tool_node = ToolNode(tools)
-        tool_response = tool_node.invoke({"messages": state["messages"]})
-        return tool_response
-
-    def should_continue(state: AgentState):
-        """Edge: Determines whether to continue with tools or end."""
-        messages = state["messages"]
-        last_message = messages[-1]
-
-        if not last_message.tool_calls:
-            return "end"
-        return "tools"
-
+    
     workflow = StateGraph(AgentState)
     workflow.add_node("agent", call_model)
-    workflow.add_node("tools", call_tools)
+    workflow.add_node("tools", ToolNode(tools=tools))
 
     workflow.add_edge(START, "agent")
     workflow.add_conditional_edges(
@@ -57,3 +64,12 @@ def build_workflow(llm_with_tools, tools: List[BaseTool]):
     workflow.add_edge("tools", "agent")
 
     return workflow.compile()
+
+if __name__ == "__main__":
+    workflow = build_workflow()
+    # Example input to start the workflow
+    initial_state = {"messages": [HumanMessage(content="What is Normalization?")]}
+    result = workflow.invoke(initial_state)
+    print(result["messages"][-1].content)
+
+

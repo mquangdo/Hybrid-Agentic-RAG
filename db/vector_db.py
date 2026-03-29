@@ -1,4 +1,6 @@
-import os
+import os, sys 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pathlib import Path
 from typing import List, Any
 from langchain_chroma import Chroma

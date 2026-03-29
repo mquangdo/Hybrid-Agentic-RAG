@@ -12,7 +12,8 @@ wheels/
 #Folder
 db/__pycache__/
 db/chroma_db/
-
+src/__pycache__/
+chroma_db/
 
 #Environment variables
 .env
