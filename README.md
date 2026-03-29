@@ -84,55 +84,6 @@ CHROMA_HOST=localhost
 CHROMA_PORT=8000
 ```
 
-## 📖 Usage
-
-### Basic Usage
-
-```python
-from src.agentic_rag import HybridRAGSystem
-
-# Initialize system
-rag = HybridRAGSystem()
-
-# Process documents
-rag.ingest_documents(["doc1.txt", "doc2.pdf"])
-
-# Query with hybrid retrieval
-response = rag.query("What are the relationships between AI and machine learning?")
-print(response)
-```
-
-### Advanced Usage
-
-```python
-# Direct vector search
-vector_results = rag.vector_search("neural networks", top_k=5)
-
-# Direct graph query
-graph_results = rag.graph_query("MATCH (n:Entity {name: 'AI'}) RETURN n")
-
-# Entity-based retrieval
-entities = rag.extract_entities("Apple was founded by Steve Jobs")
-graph_context = rag.get_entity_relationships(entities)
-```
-
-## 📁 Project Structure
-
-```
-├── src/
-│   ├── agentic_rag.py      # Main RAG orchestrator
-│   ├── vector_store.py     # ChromaDB interface
-│   ├── graph_store.py      # Neo4j interface
-│   ├── agents/             # Retrieval agents
-│   │   ├── router.py        # Query routing logic
-│   │   └── extractor.py     # Entity extraction
-│   └── embedding/           # Embedding utilities
-├── data/                   # Document storage
-├── db/                     # Database files
-├── utils/                  # Helper functions
-└── tests/                  # Test suite
-```
-
 ## 🔍 How It Works
 
 ### Vector Store (ChromaDB)
@@ -173,24 +124,6 @@ graph_context = rag.get_entity_relationships(entities)
     "chunk_overlap": 200,            # Chunk overlap
     "embedding_model": "text-embedding-ada-002"
 }
-```
-
-## 📊 Performance Benchmarks
-
-| Query Type | Latency | Recall@10 | MRR |
-|-----------|---------|-----------|-----|
-| Vector Only | 125ms | 0.72 | 0.68 |
-| Graph Only | 89ms | 0.51 | 0.45 |
-| Hybrid RAG | 167ms | **0.84** | **0.79** |
-
-## 🧪 Testing
-
-```bash
-# Run tests
-pytest tests/
-
-# Run specific test
-pytest tests/test_vector_store.py -v
 ```
 
 ## 🚀 Future Enhancements
