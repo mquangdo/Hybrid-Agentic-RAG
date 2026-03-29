@@ -7,7 +7,8 @@ import operator
 
 
 class AgentState(TypedDict):
-    """State definition for the ReAct agent.
+    """
+    State definition for the ReAct agent.
 
     Attributes:
         messages: List of messages in the conversation (HumanMessage, AIMessage, ToolMessage)

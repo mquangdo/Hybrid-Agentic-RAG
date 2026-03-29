@@ -8,20 +8,41 @@ from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
 from state import AgentState
 from langchain_groq import ChatGroq
-from tools import document_retriever
+from tools import get_tools
 from dotenv import load_dotenv
+from functools import lru_cache
 
 load_dotenv()  
 
-llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.7, api_key=os.getenv("GROQ_API_KEY"))
-tools = [document_retriever]
-llm_with_tools = llm.bind_tools(tools)
+#Set up functions
+@lru_cache(maxsize=1)
+def get_llm(have_tools: bool = True) -> ChatGroq:
+    """
+    Initializes and returns the LLM model with tools bound.
+
+    This function sets up the ChatGroq model with the appropriate API key
+    and binds the document retriever tool to it for use in the workflow.
+
+    Args:
+        None
+        
+    Returns:
+        An instance of the LLM model with tools bound for invocation in the workflow
+    """
+    llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.7, api_key=os.getenv("GROQ_API_KEY"))
+    tools = get_tools()
+    llm_with_tools = llm.bind_tools(tools)
+    return llm_with_tools
+
 
 def call_model(state: AgentState):
         """Node: Calls the LLM to generate response or tool calls."""
         messages = state["messages"]
+        
+        llm_with_tools = get_llm()
         response = llm_with_tools.invoke(messages)
         return {"messages": [response]}
+
 
 def should_continue(state: AgentState):
     """Edge: Determines whether to continue with tools or end."""
@@ -55,7 +76,7 @@ def build_workflow():
     
     workflow = StateGraph(AgentState)
     workflow.add_node("agent", call_model)
-    workflow.add_node("tools", ToolNode(tools=tools))
+    workflow.add_node("tools", ToolNode(tools=get_tools()))
 
     workflow.add_edge(START, "agent")
     workflow.add_conditional_edges(
@@ -68,7 +89,7 @@ def build_workflow():
 if __name__ == "__main__":
     workflow = build_workflow()
     # Example input to start the workflow
-    initial_state = {"messages": [HumanMessage(content="What is Normalization?")]}
+    initial_state = {"messages": [HumanMessage(content="What is Attention")]}
     result = workflow.invoke(initial_state)
     print(result["messages"][-1].content)
 
