@@ -8,3 +8,8 @@ class RetrieverInputSchema(BaseModel):
 class WebSearchInputSchema(BaseModel):
     """Input schema for the web search tool."""
     query: str = Field(..., description="Search query string for web search")
+
+class AddInputSchema(BaseModel):
+    """Input schema for the add tool."""
+    a: int = Field(..., description="First number to add")
+    b: int = Field(..., description="Second number to add")

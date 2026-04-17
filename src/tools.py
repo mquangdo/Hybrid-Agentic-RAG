@@ -6,12 +6,12 @@ from langchain_core.tools import tool
 from langchain_core.tools.structured import StructuredTool
 from db.vector_db import VectorDB
 from functools import lru_cache
-from schema import RetrieverInputSchema, WebSearchInputSchema
+from schema import AddInputSchema, RetrieverInputSchema, WebSearchInputSchema
 
 class RAGTools:
     
     @staticmethod
-    @lru_cache(maxsize=1)
+    # @lru_cache(maxsize=1)
     def get_vector_db():
         """
         Initializes and returns the VectorDB instance.
@@ -30,14 +30,20 @@ class RAGTools:
     
     
     @staticmethod
-    @lru_cache(maxsize=1)
-    def get_retriever(k: int = 3):
+    # @lru_cache(maxsize=1)
+    def get_retriever(k: int = 10):
         vector_db = RAGTools.get_vector_db()
         return vector_db.get_retriever(k=k)
-
+    
+    
+    @staticmethod
+    def get_retreiver_with_reranking(k: int = 3):
+        retriever = RAGTools.get_retriever()
+        return RAGTools
+    
 
     @staticmethod
-    def document_retriever(query: str) -> List[str]:
+    def document_retriever_tool(query: str) -> List[str]:
         """
         Searches through documents to find relevant information.
 
@@ -55,6 +61,27 @@ class RAGTools:
         docs = retriever.invoke(query)
         return [doc.page_content for doc in docs]
     
+    @staticmethod
+    def add(a: int, b: int) -> int:
+        """
+        Example tool that adds two numbers together.
+
+        This is a simple example of a tool function that can be called by the LLM.
+        It takes two integers as input and returns their sum. You can replace this
+        with any function that performs a specific task you want the LLM to be able
+        to call.
+
+        Args:
+            a: First integer to add
+            b: Second integer to add
+
+        Returns:
+            The sum of the two input integers
+        """
+        return a + b
+    
+
+    
     
 def get_tools() -> List[StructuredTool]:
     """
@@ -69,10 +96,16 @@ def get_tools() -> List[StructuredTool]:
     
     rag_tools = [
         StructuredTool.from_function(
-            func=RAGTools.document_retriever,
+            func=RAGTools.document_retriever_tool,
             name="document_retriever",
             description="Search through documents to find relevant information. Use this tool when you need to answer questions about the content in the documents.",
             input_schema=RetrieverInputSchema
+        ),
+        StructuredTool.from_function(
+            func=RAGTools.add,
+            name="add",
+            description="Add two numbers together. This is a simple example of a tool function that can be called by the LLM.",
+            input_schema=AddInputSchema
         )
     ]
     

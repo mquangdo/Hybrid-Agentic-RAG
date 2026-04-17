@@ -110,3 +110,5 @@ class VectorDB:
                 collection_name=self.collection_name,
             )
         return self.vectorstore.as_retriever(search_kwargs={"k": k})
+    
+

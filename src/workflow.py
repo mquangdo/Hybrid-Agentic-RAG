@@ -6,6 +6,7 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
+from langfuse.langchain import CallbackHandler
 from state import AgentState
 from langchain_groq import ChatGroq
 from tools import get_tools
@@ -89,8 +90,34 @@ def build_workflow():
 if __name__ == "__main__":
     workflow = build_workflow()
     # Example input to start the workflow
-    initial_state = {"messages": [HumanMessage(content="What is Attention")]}
-    result = workflow.invoke(initial_state)
+    initial_state = {"messages": [HumanMessage(content="What is normalization, what is attention?")]}
+    result = workflow.invoke(initial_state, config={"callbacks": [CallbackHandler()]})
     print(result["messages"][-1].content)
+    
+    import os
+    # Giả sử bạn đã định nghĩa workflow của mình
+    # app = workflow.compile()
+
+    # Thư mục để lưu ảnh (tùy chọn)
+    output_dir = "images"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    file_path = os.path.join(output_dir, "graph.png")
+
+    # Lấy dữ liệu ảnh PNG từ graph
+    # LangGraph sử dụng Mermaid.ink API để render ảnh online
+    try:
+        # draw_mermaid_png() trả về dữ liệu binary của ảnh
+        png_data = workflow.get_graph().draw_mermaid_png()
+        
+        # Ghi dữ liệu binary vào file
+        with open(file_path, "wb") as f:
+            f.write(png_data)
+        print(f"✅ Đã lưu ảnh graph thành công tại: {file_path}")
+        
+    except Exception as e:
+        print(f"❌ Lỗi khi lưu ảnh: {e}")
+        print("Có thể do vấn đề kết nối mạng (để gọi Mermaid API) hoặc thiếu thư viện bổ trợ.")
 
 
